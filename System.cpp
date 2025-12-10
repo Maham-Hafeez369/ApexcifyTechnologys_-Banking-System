@@ -166,14 +166,6 @@ public:
 
     virtual ~Account() {}
 
-    void setID(int id)
-    {
-        this->id = id;
-    }
-    void setBalance(double b)
-    {
-        balance = b;
-    }
     int getId()
     {
         return id;
@@ -332,6 +324,74 @@ public:
         Account::print();
         cout << "Minimum Balance: " << minimumBalance << endl;
         cout << "Monthly Fee: " << monthlyFee << endl;
+    }
+};
+class Transaction
+{
+private:
+    int id;
+    int fromAccountId;
+    int toAccountId;
+    double amount;
+    string type;      // "DEPOSIT", "WITHDRAW", "TRANSFER"
+    string timestamp; // stored as readable string
+
+public:
+    Transaction(int id, int fromAcc, int toAcc, double amount, string type)
+    {
+        this->id = id;
+        this->fromAccountId = fromAcc;
+        this->toAccountId = toAcc;
+        this->amount = amount;
+        this->type = type;
+
+        // Generate timestamp
+        time_t now = time(nullptr);  // get current time
+        timestamp = ctime(&now);  // convert to string
+        // Remove newline from ctime()
+        if (!timestamp.empty() && timestamp.back() == '\n')
+            timestamp.pop_back();
+    }
+
+    int getId()
+    {
+        return id;
+    }
+
+    int getFromAccountId()
+    {
+        return fromAccountId;
+    }
+
+    int getToAccountId()
+    {
+        return toAccountId;
+    }
+
+    double getAmount()
+    {
+        return amount;
+    }
+
+    string getType()
+    {
+        return type;
+    }
+
+    string getTimestamp()
+    {
+        return timestamp;
+    }
+
+    void print()
+    {
+        cout << "=== Transaction ===" << endl;
+        cout << "ID: " << id << endl;
+        cout << "Type: " << type << endl;
+        cout << "From Account: " << fromAccountId << endl;
+        cout << "To Account: " << toAccountId << endl;
+        cout << "Amount: " << amount << endl;
+        cout << "Timestamp: " << timestamp << endl;
     }
 };
 
