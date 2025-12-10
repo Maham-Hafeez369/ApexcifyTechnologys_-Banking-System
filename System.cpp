@@ -162,9 +162,18 @@ public:
         active = true;
         owner = nullptr;
     }
+    Account(int id, double balance = 0.0, bool state = true, Customer *c = nullptr) : id(id), balance(balance), owner(c), active(state) {};
 
     virtual ~Account() {}
 
+    void setID(int id)
+    {
+        this->id = id;
+    }
+    void setBalance(double b)
+    {
+        balance = b;
+    }
     int getId()
     {
         return id;
@@ -212,7 +221,7 @@ public:
     // PURE VIRTUAL → makes class abstract
     virtual void applyMonthlyUpdate() = 0;
 
-    //  virtual string getAccountType() = 0;
+    virtual string getAccountType() = 0;
 
     void setOwner(Customer *c)
     {
@@ -241,13 +250,9 @@ private:
     double interestRate; // annual interest rate
 public:
     SavingsAccount() {};
-    SavingsAccount(int id, double initialBalance = 0.0) : id(id), balance(initialBalance), interestRate(0.0), owner(nullptr), active(true) {}
-    // this->id = id;
-    // this->balance = initialBalance;
-    // interestRate = 0.0;
-    // owner = nullptr;
-    // active = true;
-    //}
+    SavingsAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double interestrate = 0.0) : Account(id, initialBalance, state, c), interestRate(interestRate) {
+                                                                                                                               };
+
     void setInterestRate(double rate) { interestRate = rate; }
     double getInterestRate() const { return interestRate; }
 
@@ -255,55 +260,28 @@ public:
     {
         balance += balance * interestRate / 12.0; // monthly interest
     }
+    string getAccountType() override
+    {
+        return "Saving_Account";
+    }
 
     void print() override
     {
-        cout << "Savings Account ID: " << id << endl;
-        cout << "Balance: " << fixed << setprecision(2) << balance << endl;
+        Account::print();
         cout << "Interest Rate: " << interestRate * 100 << "%" << endl;
-        cout << "Status: " << (active ? "Active" : "Locked") << endl;
     }
-
-    int getId() const { return id; }
-    double getBalance() const { return balance; }
-
-    void setOwner(Customer *c) { owner = c; }
-    Customer *getOwner() const { return owner; }
-    void lock() { active = false; }
-    void unlock() { active = true; }
 };
 class CurrentAccount : public Account
 {
 private:
-    int id;
-    double balance;
     double monthlyFee;
-    Customer *owner;
-    bool active;
 
 public:
     CurrentAccount() {}
-    CurrentAccount(int id, double initialBalance = 0.0)
-        : id(id), balance(initialBalance), monthlyFee(0.0), owner(nullptr), active(true) {}
+    CurrentAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double monthlyfee) : Account(id, initialBalance, state, c), monthlyFee(monthlyfee) {}
 
     void setMonthlyFee(double fee) { monthlyFee = fee; }
     double getMonthlyFee() const { return monthlyFee; }
-
-    void deposit(double amount)
-    {
-        if (!active)
-            throw runtime_error("Account locked");
-        balance += amount;
-    }
-
-    void withdraw(double amount)
-    {
-        if (!active)
-            throw runtime_error("Account locked");
-        if (amount > balance)
-            throw runtime_error("Insufficient funds");
-        balance -= amount;
-    }
 
     void applyMonthlyUpdate() override
     {
@@ -311,37 +289,26 @@ public:
         if (balance < 0)
             balance = 0; // Prevent negative balance
     }
-
-    void print() const
+    string getAccountType() override
     {
-        cout << "Current Account ID: " << id << endl;
-        cout << "Balance: " << fixed << setprecision(2) << balance << endl;
-        cout << "Monthly Fee: " << monthlyFee << endl;
-        cout << "Status: " << (active ? "Active" : "Locked") << endl;
+        return "Current_Account";
     }
-
-    int getId() const { return id; }
-    double getBalance() const { return balance; }
-
-    void setOwner(Customer *c) { owner = c; }
-    Customer *getOwner() const { return owner; }
-    void lock() { active = false; }
-    void unlock() { active = true; }
+    void print()
+    {
+        Account::print();
+        cout << "Monthly Fee: " << monthlyFee << endl;
+    }
 };
 class BusinessAccount : public Account
 {
 private:
-    int id;
-    double balance;
     double minimumBalance;
     double monthlyFee;
-    Customer *owner;
-    bool active;
 
 public:
     BusinessAccount() {};
-    BusinessAccount(int id, double initialBalance = 0.0)
-        : id(id), balance(initialBalance), minimumBalance(0.0), monthlyFee(0.0), owner(nullptr), active(true) {}
+    BusinessAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double monthlyfee, double minimumbalance)
+        : Account(id, initialBalance, state, c), minimumBalance(minimumbalance), monthlyFee(monthlyfee) {}
 
     void setMinimumBalance(double minBal) { minimumBalance = minBal; }
     double getMinimumBalance() const { return minimumBalance; }
@@ -349,49 +316,27 @@ public:
     void setMonthlyFee(double fee) { monthlyFee = fee; }
     double getMonthlyFee() const { return monthlyFee; }
 
-    void deposit(double amount)
-    {
-        if (!active)
-            throw runtime_error("Account locked");
-        balance += amount;
-    }
-
-    void withdraw(double amount)
-    {
-        if (!active)
-            throw runtime_error("Account locked");
-        if ((balance - amount) < minimumBalance)
-            throw runtime_error("Cannot go below minimum balance");
-        balance -= amount;
-    }
-
     void applyMonthlyUpdate() override
     {
         balance -= monthlyFee;
         if (balance < minimumBalance)
             balance = minimumBalance; // Enforce minimum
     }
-
-    void print() const
+    string getAccountType() override
     {
-        cout << "Business Account ID: " << id << endl;
-        cout << "Balance: " << fixed << setprecision(2) << balance << endl;
-        cout << "Minimum Balance: " << minimumBalance << endl;
-        cout << "Monthly Fee: " << monthlyFee << endl;
-        cout << "Status: " << (active ? "Active" : "Locked") << endl;
+        return "Business_Account";
     }
 
-    int getId() const { return id; }
-    double getBalance() const { return balance; }
-
-    void setOwner(Customer *c) { owner = c; }
-    Customer *getOwner() const { return owner; }
-    void lock() { active = false; }
-    void unlock() { active = true; }
+    void print()
+    {
+        Account::print();
+        cout << "Minimum Balance: " << minimumBalance << endl;
+        cout << "Monthly Fee: " << monthlyFee << endl;
+    }
 };
 
 int main()
 {
-
+ 
     return 0;
 }
