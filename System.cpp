@@ -12,6 +12,7 @@ protected:
     int id;
 
 public:
+    Person(const string &n, const int i) : name(n), id(i) {}
     string getName()
     {
         return name;
@@ -26,12 +27,6 @@ public:
     {
         name = newName;
     }
-
-    void setId(int newId)
-    {
-        id = newId;
-    }
-
     void print()
     {
         cout << "Name: " << name << endl;
@@ -46,6 +41,7 @@ private:
     vector<int> accountIds;
 
 public:
+    Customer(const string &n, const int i, const string &e, const string &p) : Person(n, i), email(e), pin(p) {}
     string getEmail()
     {
         return email;
@@ -94,6 +90,7 @@ protected:
     string password;
 
 public:
+    Employee(const string &n, const int i, const string &r) : Person(n, i), role(r) {}
     string getRole()
     {
         return role;
@@ -127,7 +124,8 @@ private:
     double transferLimit;
 
 public:
-    bool authorizeSmallTransfer(double amount)
+    Banker(const string &n, const int i, const string &r, double limit) : Employee(n, i, r), transferLimit(limit) {}
+    bool authorizeSmallTransfer(double amount) // for transfers within limit
     {
         return amount <= transferLimit;
     }
@@ -157,9 +155,9 @@ protected:
     Customer *owner;
 
 public:
-    Account(int id, double balance = 0.0, bool state = true, Customer *c = nullptr) : id(id), balance(balance), owner(c), active(state) {};
+    Account(int id, Customer *c, double balance = 0.0, bool state = true) : id(id), balance(balance), owner(c), active(state) {};
 
-    virtual ~Account() {}
+    virtual ~Account() {} // Virtual destructor for proper cleanup
 
     int getId()
     {
@@ -195,6 +193,10 @@ public:
         }
         if (amount > 0)
             balance += amount;
+        if (amount <= 0)
+        {
+            cout << "Invalid deposit amount" << endl;
+        }
     }
 
     bool withdraw(double amount)
@@ -236,8 +238,8 @@ class SavingsAccount : public Account
 private:
     double interestRate; // annual interest rate
 public:
-    SavingsAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double interestrate = 0.0) : Account(id, initialBalance, state, c), interestRate(interestRate) {
-                                                                                                                               };
+    SavingsAccount(int id, Customer *c, double initialBalance = 0.0, bool state = true, double interestrate = 0.0) : Account(id, c, initialBalance, state), interestRate(interestRate) {
+                                                                                                                     };
 
     void setInterestRate(double rate) { interestRate = rate; }
     double getInterestRate() const { return interestRate; }
@@ -263,7 +265,7 @@ private:
     double monthlyFee;
 
 public:
-    CurrentAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double monthlyfee=100) : Account(id, initialBalance, state, c), monthlyFee(monthlyfee) {}
+    CurrentAccount(int id, Customer *c, double initialBalance = 0.0, bool state = true, double monthlyfee = 0) : Account(id, c, initialBalance, state), monthlyFee(monthlyfee) {}
 
     void setMonthlyFee(double fee) { monthlyFee = fee; }
     double getMonthlyFee() const { return monthlyFee; }
@@ -291,9 +293,8 @@ private:
     double monthlyFee;
 
 public:
-
-    BusinessAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double monthlyfee=100, double minimumbalance=500)
-        : Account(id, initialBalance, state, c), minimumBalance(minimumbalance), monthlyFee(monthlyfee) {}
+    BusinessAccount(int id, Customer *c, double initialBalance = 0.0, bool state = true, double monthlyfee = 0, double minimumbalance=10000)
+        : Account(id,c, initialBalance, state), minimumBalance(minimumbalance), monthlyFee(monthlyfee) {}
 
     void setMinimumBalance(double minBal) { minimumBalance = minBal; }
     double getMinimumBalance() const { return minimumBalance; }
@@ -387,6 +388,11 @@ public:
         cout << "Timestamp: " << timestamp << endl;
     }
 };
+Customer createCustomer(string name, int id, string email, string pin)
+{
+Customer c(name, id, email, pin);
+    return c;
+}
 
 int main()
 {
