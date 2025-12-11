@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <string>
+#include <ctime>
 #include <iomanip>
 using namespace std;
 
@@ -155,13 +157,6 @@ protected:
     Customer *owner;
 
 public:
-    Account()
-    {
-        id = 0;
-        balance = 0.0;
-        active = true;
-        owner = nullptr;
-    }
     Account(int id, double balance = 0.0, bool state = true, Customer *c = nullptr) : id(id), balance(balance), owner(c), active(state) {};
 
     virtual ~Account() {}
@@ -241,7 +236,6 @@ class SavingsAccount : public Account
 private:
     double interestRate; // annual interest rate
 public:
-    SavingsAccount() {};
     SavingsAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double interestrate = 0.0) : Account(id, initialBalance, state, c), interestRate(interestRate) {
                                                                                                                                };
 
@@ -269,8 +263,7 @@ private:
     double monthlyFee;
 
 public:
-    CurrentAccount() {}
-    CurrentAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double monthlyfee) : Account(id, initialBalance, state, c), monthlyFee(monthlyfee) {}
+    CurrentAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double monthlyfee=100) : Account(id, initialBalance, state, c), monthlyFee(monthlyfee) {}
 
     void setMonthlyFee(double fee) { monthlyFee = fee; }
     double getMonthlyFee() const { return monthlyFee; }
@@ -298,8 +291,8 @@ private:
     double monthlyFee;
 
 public:
-    BusinessAccount() {};
-    BusinessAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double monthlyfee, double minimumbalance)
+
+    BusinessAccount(int id, double initialBalance = 0.0, bool state = true, Customer *c = nullptr, double monthlyfee=100, double minimumbalance=500)
         : Account(id, initialBalance, state, c), minimumBalance(minimumbalance), monthlyFee(monthlyfee) {}
 
     void setMinimumBalance(double minBal) { minimumBalance = minBal; }
@@ -346,10 +339,10 @@ public:
         this->type = type;
 
         // Generate timestamp
-        time_t now = time(nullptr);  // get current time
-        timestamp = ctime(&now);  // convert to string
-        // Remove newline from ctime()
-        if (!timestamp.empty() && timestamp.back() == '\n')
+        time_t now;
+        time(&now);                                         // get current time in variable now
+        timestamp = ctime(&now);                            // convert to string
+        if (!timestamp.empty() && timestamp.back() == '\n') // Remove newline from ctime()
             timestamp.pop_back();
     }
 
@@ -397,6 +390,6 @@ public:
 
 int main()
 {
- 
+
     return 0;
 }
