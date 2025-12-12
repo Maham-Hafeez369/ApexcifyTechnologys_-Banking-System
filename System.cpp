@@ -4,7 +4,29 @@
 #include <ctime>
 #include <iomanip>
 using namespace std;
-
+double globalBusinessMinBalance = 10000; // Minimum balance for business accounts
+double globalMonthlyFee = 10;            // Monthly fee for current accounts
+double globalInterestRate = 0.03;        // 3% annual interest rate for savings accounts
+int CustomerId = 1;                      // generating IDs
+int BankerId = 1;
+int AccountId = 1;
+int TransactionId = 1;
+int nextCustomerId()
+{
+    return CustomerId++;
+}
+int nextBankerId()
+{
+    return BankerId++;
+}
+int nextAccountId()
+{
+    return AccountId++;
+}
+int nextTransactionId()
+{
+    return TransactionId++;
+}
 class Person
 {
 protected:
@@ -238,8 +260,8 @@ class SavingsAccount : public Account
 private:
     double interestRate; // annual interest rate
 public:
-    SavingsAccount(int id, Customer *c, double initialBalance = 0.0, bool state = true, double interestrate = 0.0) : Account(id, c, initialBalance, state), interestRate(interestRate) {
-                                                                                                                     };
+    SavingsAccount(int id, Customer *c, double initialBalance = 0.0, double interestrate = 0.0) : Account(id, c, initialBalance, true), interestRate(interestRate) {
+                                                                                                  };
 
     void setInterestRate(double rate) { interestRate = rate; }
     double getInterestRate() const { return interestRate; }
@@ -265,7 +287,7 @@ private:
     double monthlyFee;
 
 public:
-    CurrentAccount(int id, Customer *c, double initialBalance = 0.0, bool state = true, double monthlyfee = 0) : Account(id, c, initialBalance, state), monthlyFee(monthlyfee) {}
+    CurrentAccount(int id, Customer *c, double initialBalance = 0.0, double monthlyfee = 0) : Account(id, c, initialBalance, true), monthlyFee(monthlyfee) {}
 
     void setMonthlyFee(double fee) { monthlyFee = fee; }
     double getMonthlyFee() const { return monthlyFee; }
@@ -293,8 +315,8 @@ private:
     double monthlyFee;
 
 public:
-    BusinessAccount(int id, Customer *c, double initialBalance = 0.0, bool state = true, double monthlyfee = 0, double minimumbalance=10000)
-        : Account(id,c, initialBalance, state), minimumBalance(minimumbalance), monthlyFee(monthlyfee) {}
+    BusinessAccount(int id, Customer *c, double initialBalance = 0.0, double monthlyfee = 0, double minimumbalance = 10000)
+        : Account(id, c, initialBalance, true), minimumBalance(minimumbalance), monthlyFee(monthlyfee) {}
 
     void setMinimumBalance(double minBal) { minimumBalance = minBal; }
     double getMinimumBalance() const { return minimumBalance; }
@@ -388,10 +410,43 @@ public:
         cout << "Timestamp: " << timestamp << endl;
     }
 };
-Customer createCustomer(string name, int id, string email, string pin)
+Customer *createCustomer()
 {
-Customer c(name, id, email, pin);
-    return c;
+    string name, email, pin;
+    cout << "Enter Your name: ";
+    cin >> name;
+    cout << "Enter Your email: ";
+    cin >> email;
+    cout << "Set your pin: ";
+    cin >> pin;
+    Customer c(name, nextCustomerId(), email, pin);
+    return &c;
+}
+Account *createSavingsAccount(Customer *c)
+{
+
+    double initialBalance;
+    cout << "Enter initial balance: ";
+    cin >> initialBalance;
+    SavingsAccount sa = SavingsAccount(nextAccountId(), c, initialBalance, globalInterestRate);
+    return &sa;
+}
+Account *createCurrentAccount(Customer *c)
+{
+    double initialBalance;
+    cout << "Enter initial balance: ";
+    cin >> initialBalance;
+    CurrentAccount ca = CurrentAccount(nextAccountId(), c, initialBalance, globalMonthlyFee);
+    return &ca;
+}
+Account *createBusinessAccount(Customer *c)
+{
+    double initialBalance;
+    cout << "Enter initial balance: ";
+    cin >> initialBalance;
+    BusinessAccount ba = BusinessAccount(nextAccountId(), c, initialBalance, globalMonthlyFee, globalBusinessMinBalance);
+
+    return &ba;
 }
 
 int main()
