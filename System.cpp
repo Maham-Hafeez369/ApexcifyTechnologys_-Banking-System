@@ -3,6 +3,8 @@
 #include <string>
 #include <ctime>
 #include <iomanip>
+#include <limits>
+#include <fstream>
 using namespace std;
 double globalBusinessMinBalance = 10000; // Minimum balance for business accounts
 double globalMonthlyFee = 10;            // Monthly fee for current accounts
@@ -174,10 +176,9 @@ protected:
     int id;
     double balance;
     bool active;
-    Customer *owner;
-
+   int customerID;
 public:
-    Account(int id, Customer *c, double balance = 0.0, bool state = true) : id(id), balance(balance), owner(c), active(state) {};
+    Account(int id, int c, double balance = 0.0, bool state = true) : id(id), balance(balance), customerID(c), active(state) {};
 
     virtual ~Account() {} // Virtual destructor for proper cleanup
 
@@ -234,14 +235,14 @@ public:
 
     virtual string getAccountType() = 0;
 
-    void setOwner(Customer *c)
+    void setOwner(int c)
     {
-        owner = c;
+        customerID = c;
     }
 
-    Customer *getOwner()
+    int getOwner()
     {
-        return owner;
+        return customerID;
     }
 
     virtual void print()
@@ -249,9 +250,12 @@ public:
         cout << "Account ID: " << id << endl;
         cout << "Balance: " << balance << endl;
         cout << "Status: " << (active ? "Active" : "Locked") << endl;
-        if (owner != nullptr)
+        ifstream in("customer_" + to_string(customerID) + ".txt");
+        if (in.is_open())
         {
-            cout << "Owner: " << owner->getName() << endl;
+            string var;
+            in>>var;
+            cout<<"Name of Owner:"<<var<<endl;
         }
     }
 };
@@ -260,7 +264,7 @@ class SavingsAccount : public Account
 private:
     double interestRate; // annual interest rate
 public:
-    SavingsAccount(int id, Customer *c, double initialBalance = 0.0, double interestrate = 0.0) : Account(id, c, initialBalance, true), interestRate(interestRate) {
+    SavingsAccount(int id, int c, double initialBalance = 0.0, double interestrate = 0.0) : Account(id, c, initialBalance, true), interestRate(interestRate) {
                                                                                                   };
 
     void setInterestRate(double rate) { interestRate = rate; }
@@ -287,7 +291,7 @@ private:
     double monthlyFee;
 
 public:
-    CurrentAccount(int id, Customer *c, double initialBalance = 0.0, double monthlyfee = 0) : Account(id, c, initialBalance, true), monthlyFee(monthlyfee) {}
+    CurrentAccount(int id, int c, double initialBalance = 0.0, double monthlyfee = 0) : Account(id, c, initialBalance, true), monthlyFee(monthlyfee) {}
 
     void setMonthlyFee(double fee) { monthlyFee = fee; }
     double getMonthlyFee() const { return monthlyFee; }
@@ -315,7 +319,7 @@ private:
     double monthlyFee;
 
 public:
-    BusinessAccount(int id, Customer *c, double initialBalance = 0.0, double monthlyfee = 0, double minimumbalance = 10000)
+    BusinessAccount(int id, int c, double initialBalance = 0.0, double monthlyfee = 0, double minimumbalance = 10000)
         : Account(id, c, initialBalance, true), minimumBalance(minimumbalance), monthlyFee(monthlyfee) {}
 
     void setMinimumBalance(double minBal) { minimumBalance = minBal; }
@@ -353,7 +357,7 @@ private:
     string timestamp; // stored as readable string
 
 public:
-    Transaction(int id, int fromAcc, int toAcc, double amount, string type)
+    Transaction(int id, int fromAcc, double amount, string type, int toAcc = 0)
     {
         this->id = id;
         this->fromAccountId = fromAcc;
@@ -419,36 +423,241 @@ Customer *createCustomer()
     cin >> email;
     cout << "Set your pin: ";
     cin >> pin;
-    Customer c(name, nextCustomerId(), email, pin);
-    return &c;
+    int id = nextCustomerId();
+    Customer *c = new Customer(name, id, email, pin);
+    ofstream outFile("customer_" + to_string(id) + ".txt");
+    if (outFile.is_open())
+    {
+        outFile << name << endl;
+        outFile << email << endl;
+        outFile << id << endl;
+        outFile << pin << endl;
+        cout << "Customer data saved to file." << endl;
+    }
+    else
+    {
+        cout << "Error saving customer data to file." << endl;
+    }
+    outFile.close();
+    return c;
 }
-Account *createSavingsAccount(Customer *c)
+Account *createSavingsAccount(int  cstmrID)
 {
 
     double initialBalance;
     cout << "Enter initial balance: ";
     cin >> initialBalance;
-    SavingsAccount sa = SavingsAccount(nextAccountId(), c, initialBalance, globalInterestRate);
-    return &sa;
+    SavingsAccount *sa = new SavingsAccount(nextAccountId(), cstmrID, initialBalance, globalInterestRate);
+    ofstream outFile("savings_account_" + to_string(sa->getId()) + ".txt");
+    if (outFile.is_open())
+    {
+        outFile << sa->getId() << endl;
+        outFile << initialBalance << endl;
+        outFile << globalInterestRate << endl;
+        outFile << cstmrID << endl;
+        cout << "Savings_account data saved to file." << endl;
+    }
+    else
+    {
+        cout << "Error saving savings_account data to file." << endl;
+    }
+    outFile.close();
+    return sa;
 }
-Account *createCurrentAccount(Customer *c)
+Account *createCurrentAccount(int cstmrID)
 {
     double initialBalance;
     cout << "Enter initial balance: ";
     cin >> initialBalance;
-    CurrentAccount ca = CurrentAccount(nextAccountId(), c, initialBalance, globalMonthlyFee);
-    return &ca;
+    CurrentAccount *ca = new CurrentAccount(nextAccountId(), cstmrID, initialBalance, globalMonthlyFee);
+    ofstream outFile("current_account_" + to_string(ca->getId()) + ".txt");
+    if (outFile.is_open())
+    {
+        outFile << ca->getId() << endl;
+        outFile << initialBalance << endl;
+        outFile << globalMonthlyFee << endl;
+        outFile << cstmrID << endl;
+        cout << "Current_account data saved to file." << endl;
+    }
+    else
+    {
+        cout << "Error saving current_account data to file." << endl;
+    }
+    outFile.close();
+    return ca;
 }
-Account *createBusinessAccount(Customer *c)
+Account *createBusinessAccount(int cstmrID)
 {
     double initialBalance;
     cout << "Enter initial balance: ";
     cin >> initialBalance;
-    BusinessAccount ba = BusinessAccount(nextAccountId(), c, initialBalance, globalMonthlyFee, globalBusinessMinBalance);
-
-    return &ba;
+    BusinessAccount *ba = new BusinessAccount(nextAccountId(), cstmrID, initialBalance, globalMonthlyFee, globalBusinessMinBalance);
+    ofstream outFile("business_account_" + to_string(ba->getId()) + ".txt");
+    if (outFile.is_open())
+    {
+        outFile << ba->getId() << endl;
+        outFile << initialBalance << endl;
+        outFile << globalMonthlyFee << endl;
+        outFile << globalBusinessMinBalance << endl;
+        outFile << cstmrID << endl;
+        cout << "Business_account data saved to file." << endl;
+    }
+    else
+    {
+        cout << "Error saving business_account data to file." << endl;
+    }
+    outFile.close();
+    return ba;
 }
+void displayMainMenu()
+{
+    cout << "=== Banking System Main Menu ===" << endl;
+    cout << "1. Create Customer" << endl;
+    cout << "2. Create Account" << endl;
+    cout << "3. Deposit" << endl;
+    cout << "4. Withdraw" << endl;
+    cout << "5. Transfer" << endl;
+    cout << "6. View Account Details" << endl;
+    cout << "7. View Transaction History" << endl;
+    cout << "8. Exit" << endl;
+    cout << "Select an option: ";
+}
+void handleAccountCreation(int accType, int cstmrID)
+{
+    Account *newAccount = nullptr;
+    switch (accType)
+    {
+    case 1:
+        newAccount = createSavingsAccount(cstmrID);
+        break;
+    case 2:
+        newAccount = createCurrentAccount(cstmrID);
+        break;
+    case 3:
+        newAccount = createBusinessAccount(cstmrID);
+        break;
+    default:
+        cout << "Invalid account type selected." << endl;
+        return;
+    }
+    if (newAccount != nullptr)
+    {
+        ofstream file("customer_"+to_string(cstmrID)+".txt", ios::app);
+        file << newAccount->getId() << endl;
+        file.close();
+        cout << newAccount->getAccountType() << " created with ID: " << newAccount->getId() << "for User :" << cstmrID << endl;
+    }
+}
+void handleDeposit()
+{
+    cout << "Enter Customer ID: " << endl;
+    int custmrID;
+    cin >> custmrID;
+    cout<<"Enter Account Type (1-Savings,2-Current,3-Business):"<<endl;
+    int accType;
+    cin>>accType;
+    cout << "Enter Account ID: " << endl;
+    int accID;
+    cin >> accID;
+    cout << "Enter amount to deposit: " << endl;
+    double amount;
+    cin >> amount;
+    double balance;
+    ifstream in;   // file stream object
+    switch (accType)
+    {
+    case 1:
+        in.open("savings_account"+to_string(accID)+".txt");
+        if(in.is_open())
+        {
+            in>>accID;
+            in>>balance;
+        }
+        break;
+    case 2:
+        /* code */
+        break;
+    case 3:
+        /* code */
+        break;
 
+    default:
+        break;
+    }
+
+   
+
+
+
+}
+void handleChoice(int choice)
+{
+    switch (choice)
+    {
+    case 1:
+    {
+        Customer *c = createCustomer();
+        cout << "Customer created with ID: " << c->getId() << endl;
+        break;
+    }
+    case 2:
+    {
+        cout << "Select Account Type:" << endl;
+        cout << "1. Savings Account" << endl;
+        cout << "2. Current Account" << endl;
+        cout << "3. Business Account" << endl;
+        int accType;
+        cin >> accType;
+        cout << "Give a Customer ID to link this account to:" << endl;
+        int custmrID;
+        cin >> custmrID;
+        handleAccountCreation(accType, custmrID);
+        break;
+    }
+    case 3:
+    {
+        cout << "Deposit:" << endl;
+        break;
+    }
+    case 4:
+    {
+        cout << "Withdraw selected." << endl;
+        break;
+    }
+    case 5:
+    {
+        cout << "Transfer selected." << endl;
+        break;
+    }
+    case 6:
+    {
+        cout << "View Account Details selected." << endl;
+        break;
+    }
+    case 7:
+    {
+        cout << "View Transaction History selected." << endl;
+        break;
+    }
+    case 8:
+    {
+        cout << "Exiting system. Goodbye!" << endl;
+        break;
+    }
+    default:
+    {
+        cout << "Invalid choice. Please try again." << endl;
+        break;
+    }
+    }
+}
+void runSystem()
+{
+    displayMainMenu();
+    int choice;
+    cin >> choice;
+    handleChoice(choice);
+}
 int main()
 {
 
